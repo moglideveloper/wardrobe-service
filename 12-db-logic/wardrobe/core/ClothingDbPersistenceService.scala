@@ -2,13 +2,17 @@ package com.mindera
 package wardrobe.core
 
 import db._
-import wardrobe.adts.Clothing
+import wardrobe.adts.{Clothing, ClothingPersistenceService}
+
 import doobie.implicits._
+
 import scala.util.Try
 
-object DbClothingOps extends DbContext {
+trait ClothingDbPersistenceService extends DbContext with ClothingPersistenceService {
 
-  def fetchClothingByName(db: Db, name: String): SEither[Seq[Clothing]] = {
+  val db = Infra.db
+
+  def fetch(name: String): SEither[Seq[Clothing]] = {
 
     val query = {
       val selectFragment = sql"SELECT * FROM CLOTHING WHERE "
@@ -21,20 +25,6 @@ object DbClothingOps extends DbContext {
     val tryQueryExecution = Try {
       val data = query.to[List].transact(xa(db)).unsafeRunSync()
       data
-    }
-
-    tryQueryExecution.sEither(ServiceCodes.INTERNAL_ERROR_MSG)
-  }
-
-  def addClothing(db: Db, clothing: Clothing): SEither[Clothing] = {
-    val query = {
-      val sql = sql"INSERT INTO CLOTHING (NAME, CATEGORY) VALUES (${clothing.name}, ${clothing.category})"
-      sql.update
-    }
-
-    val tryQueryExecution = Try {
-      val recordInserted = query.run.transact(xa(db)).unsafeRunSync()
-      clothing
     }
 
     tryQueryExecution.sEither(ServiceCodes.INTERNAL_ERROR_MSG)

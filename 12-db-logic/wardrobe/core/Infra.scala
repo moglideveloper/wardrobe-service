@@ -4,7 +4,7 @@ package wardrobe.core
 import db._
 import better.files.Resource
 
-object ClothingDb {
+object Infra {
 
   //fail fast
   val db: Db = {
